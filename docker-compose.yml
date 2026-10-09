@@ -8,6 +8,9 @@ services:
     gpus: all
     ports:
       - "${HOST_PORT:-11436}:8000"
+    networks:
+      asr_net:
+        ipv4_address: 192.168.251.10
     environment:
       MODEL_ID: snapwre/hohe-asr-amharic
       MODEL_REVISION: ${MODEL_REVISION:-main}
@@ -33,3 +36,11 @@ services:
       options:
         max-size: 10m
         max-file: "3"
+
+# Pin the subnet: Docker's default pool hands out 172.x/16 ranges, which can
+# swallow LAN clients in 172.x (e.g. 172.20.18.210) and break return routing.
+networks:
+  asr_net:
+    ipam:
+      config:
+        - subnet: 192.168.251.0/24
