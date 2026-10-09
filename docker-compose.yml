@@ -1,0 +1,35 @@
+services:
+  hohe-asr:
+    build: .
+    image: hohe-asr-amharic:local
+    container_name: hohe-asr-amharic
+    platform: linux/arm64
+    restart: unless-stopped
+    gpus: all
+    ports:
+      - "${HOST_PORT:-11436}:8000"
+    environment:
+      MODEL_ID: snapwre/hohe-asr-amharic
+      MODEL_REVISION: ${MODEL_REVISION:-main}
+      MODEL_DTYPE: ${MODEL_DTYPE:-float32}
+      MAX_AUDIO_SECONDS: ${MAX_AUDIO_SECONDS:-60}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-25}
+      HF_HOME: /model-cache
+      CUDA_VISIBLE_DEVICES: "0"
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+      TOKENIZERS_PARALLELISM: "false"
+      OMP_NUM_THREADS: "2"
+    volumes:
+      - ./hohe-asr-model-cache:/model-cache
+    shm_size: 2gb
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20m
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
